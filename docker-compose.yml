@@ -13,3 +13,4 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - CHAT_ID=${CHAT_ID}
       - ADMIN_ID=${ADMIN_ID}
+      - ALLOWED_CHATS=${ALLOWED_CHATS}

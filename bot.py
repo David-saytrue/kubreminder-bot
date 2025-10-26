@@ -18,6 +18,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
 ADMIN_IDS = [int(os.getenv("ADMIN_ID", "1040093417"))]
+ALLOWED_CHATS = os.getenv("ALLOWED_CHATS", "").split(",") if os.getenv("ALLOWED_CHATS") else []
 LESSONS_FILE = "lessons.json"
 
 TBILISI_TZ = pytz.timezone("Asia/Tbilisi")
@@ -67,6 +68,12 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def add_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ADMIN_IDS and update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("❌ У вас нет прав для добавления занятий.")
+        return
+
+    # Проверяем, что команда выполняется в разрешенном чате
+    chat_id = str(update.effective_chat.id)
+    if ALLOWED_CHATS and chat_id not in ALLOWED_CHATS and chat_id != CHAT_ID:
+        await update.message.reply_text("❌ Этот чат не авторизован для использования бота.")
         return
     if len(context.args) < 3:
         await update.message.reply_text(
@@ -143,6 +150,12 @@ async def delete_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if ADMIN_IDS and update.effective_user.id not in ADMIN_IDS:
         await update.message.reply_text("❌ У вас нет прав для удаления занятий.")
         return
+
+    # Проверяем, что команда выполняется в разрешенном чате
+    chat_id = str(update.effective_chat.id)
+    if ALLOWED_CHATS and chat_id not in ALLOWED_CHATS and chat_id != CHAT_ID:
+        await update.message.reply_text("❌ Этот чат не авторизован для использования бота.")
+        return
     if len(context.args) != 1 or not context.args[0].isdigit():
         await update.message.reply_text("❌ Используйте: /delete_lesson НОМЕР")
         return
@@ -168,19 +181,31 @@ async def daily_check(context: ContextTypes.DEFAULT_TYPE):
 
         # Напоминание за 30 минут до занятия
         if not l.get("reminded") and timedelta(0) <= time_until_lesson <= timedelta(minutes=30):
-            await context.bot.send_message(
-                chat_id=CHAT_ID,
-                text=f"⏰ Напоминание через 30 минут:\n📝 {l['description']} в {lesson_time.strftime('%H:%M')}"
-            )
+            # Отправляем во все разрешенные чаты
+            target_chats = [CHAT_ID] + ALLOWED_CHATS
+            for chat in target_chats:
+                try:
+                    await context.bot.send_message(
+                        chat_id=chat,
+                        text=f"⏰ Напоминание через 30 минут:\n📝 {l['description']} в {lesson_time.strftime('%H:%M')}"
+                    )
+                except Exception as e:
+                    logger.error(f"Ошибка отправки в чат {chat}: {e}")
             l["reminded"] = True
             changed = True
 
         # Дневное уведомление в 10:00
         if lesson_time.date() == today and now.hour == 10 and now.minute == 0:
-            await context.bot.send_message(
-                chat_id=CHAT_ID,
-                text=f"🔔 Сегодня занятие в {lesson_time.strftime('%H:%M')}:\n📝 {l['description']}"
-            )
+            # Отправляем во все разрешенные чаты
+            target_chats = [CHAT_ID] + ALLOWED_CHATS
+            for chat in target_chats:
+                try:
+                    await context.bot.send_message(
+                        chat_id=chat,
+                        text=f"🔔 Сегодня занятие в {lesson_time.strftime('%H:%M')}:\n📝 {l['description']}"
+                    )
+                except Exception as e:
+                    logger.error(f"Ошибка отправки в чат {chat}: {e}")
 
     if changed:
         save_lessons(lessons)
