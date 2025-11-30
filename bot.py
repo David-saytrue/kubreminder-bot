@@ -55,7 +55,7 @@ def save_lessons(lessons):
     """Saves the lessons schedule to the JSON file."""
     try:
         with open(LESSONS_FILE, 'w', encoding='utf-8') as f:
-            # Use ensure_ascii=False for proper Russian/Cyrillic character display in JSON
+            # Use ensure_ascii=False for proper display in JSON
             json.dump(lessons, f, ensure_ascii=False, indent=2)
         return True
     except Exception as e:
@@ -67,15 +67,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /start command, greets the user, and provides command info."""
     now_tbilisi = datetime.now(TBILISI_TZ).strftime("%Y-%m-%d %H:%M")
     message = (
-        f"👋 Привет! Я KubReminder — твой помощник для школы программирования.\n"
-        f"⏰ Сейчас в Тбилиси: {now_tbilisi}\n\n"
-        "🎯 Я здесь, чтобы помочь преподавателям не забывать свои занятия и вовремя о них напомнить.\n\n"
-        "📌 Что я умею:\n"
-        "📚 Показать ближайшие занятия: /lessons\n"
-        "📌 Показать занятия на сегодня: /today\n"
-        "📝 Добавлять новые занятия (только админ): /add_lesson\n"
-        "❌ Удалять занятия (только админ): /delete_lesson\n\n"
-        "🔔 Я буду напоминать о преподавательских занятиях заранее (за 30 минут) и каждый день в 10:00!"
+        f"👋 Hi! I'm KubReminder — your assistant for the programming school.\n"
+        f"⏰ Current time in Tbilisi: {now_tbilisi}\n\n"
+        "🎯 I'm here to help teachers remember their lessons and remind them on time.\n\n"
+        "📌 What I can do:\n"
+        "📚 Show upcoming lessons: /lessons\n"
+        "📌 Show today's lessons: /today\n"
+        "📝 Add new lessons (admin only): /add_lesson\n"
+        "❌ Delete lessons (admin only): /delete_lesson\n\n"
+        "🔔 I will remind you about lessons in advance (30 minutes before) and every day at 10:00 AM!"
     )
     await update.message.reply_text(message)
 
@@ -83,22 +83,22 @@ async def add_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /add_lesson command (admin-only). Adds a new lesson."""
     # Check for admin rights
     if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("❌ У вас нет прав для добавления занятий.")
+        await update.message.reply_text("❌ You do not have permission to add lessons.")
         return
 
     # Check if the command is executed in an allowed chat
     chat_id = str(update.effective_chat.id)
     if ALLOWED_CHATS and chat_id not in ALLOWED_CHATS and chat_id != CHAT_ID:
-        await update.message.reply_text("❌ Этот чат не авторизован для использования бота.")
+        await update.message.reply_text("❌ This chat is not authorized to use the bot.")
         return
 
     # Check for correct argument count
     if len(context.args) < 3:
         await update.message.reply_text(
-            "❌ Неверный формат команды.\n"
-            "Используйте: /add_lesson ГГГГ-ММ-ДД ЧЧ:ММ описание\n\n"
-            "📌 Пример:\n"
-            "/add_lesson 2025-10-21 17:00 Подготовка к занятию по Python"
+            "❌ Invalid command format.\n"
+            "Use: /add_lesson YYYY-MM-DD HH:MM description\n\n"
+            "📌 Example:\n"
+            "/add_lesson 2025-10-21 17:00 Python Lesson Preparation"
         )
         return
     try:
@@ -122,29 +122,31 @@ async def add_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lessons.sort(key=lambda x: x['datetime']) # Sort by datetime
         
         if save_lessons(lessons):
-            message = f"✅ Занятие добавлено:\n📅 Дата: {date_str}\n🕒 Время: {time_str}\n📝 Описание: {description}\n\n"
-            message += "📌 Все текущие занятия:\n"
+            message = f"✅ Lesson added:\n📅 Date: {date_str}\n🕒 Time: {time_str}\n📝 Description: {description}\n\n"
+            message += "📌 All current lessons:\n"
+            # Note: The original code showed all lessons, but listing only *upcoming* is better practice.
+            # However, maintaining the original logic to display *all* added lessons here:
             for i, l in enumerate(lessons, 1):
                 message += f"{i}. {l['date']} {l['time']} — {l['description']}\n"
             await update.message.reply_text(message)
         else:
-            await update.message.reply_text("❌ Ошибка при сохранении занятия.")
+            await update.message.reply_text("❌ Error saving the lesson.")
     except ValueError:
         await update.message.reply_text(
-            "❌ Неверный формат даты или времени.\n"
-            "Используйте: /add_lesson ГГГГ-ММ-ДД ЧЧ:ММ описание\n\n"
-            "📌 Пример:\n"
-            "/add_lesson 2025-10-21 17:00 Подготовка к занятию по Python"
+            "❌ Invalid date or time format.\n"
+            "Use: /add_lesson YYYY-MM-DD HH:MM description\n\n"
+            "📌 Example:\n"
+            "/add_lesson 2025-10-21 17:00 Python Lesson Preparation"
         )
     except Exception as e:
         logger.error(f"Error adding lesson: {e}")
-        await update.message.reply_text("❌ Произошла ошибка.")
+        await update.message.reply_text("❌ An error occurred.")
 
 async def list_lessons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /lessons command. Lists upcoming lessons."""
     lessons = load_lessons()
     if not lessons:
-        await update.message.reply_text("📭 Нет запланированных занятий.")
+        await update.message.reply_text("📭 No lessons scheduled.")
         return
     
     now = datetime.now(TBILISI_TZ)
@@ -152,10 +154,10 @@ async def list_lessons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     upcoming = [l for l in lessons if datetime.fromisoformat(l['datetime']).astimezone(TBILISI_TZ) >= now]
     
     if not upcoming:
-        await update.message.reply_text("📭 Нет предстоящих занятий.")
+        await update.message.reply_text("📭 No upcoming lessons.")
         return
     
-    message = "📚 Ближайшие занятия:\n\n"
+    message = "📚 Upcoming lessons:\n\n"
     # List up to 10 upcoming lessons
     for i, l in enumerate(upcoming[:10], 1):
         message += f"{i}. 📅 {l['date']} 🕒 {l['time']}\n   📝 {l['description']}\n\n"
@@ -172,10 +174,10 @@ async def today_lessons(update: Update, context: ContextTypes.DEFAULT_TYPE):
     today_list = [l for l in lessons if datetime.fromisoformat(l['datetime']).astimezone(TBILISI_TZ).date() == today]
     
     if not today_list:
-        await update.message.reply_text("📭 Сегодня занятий нет.")
+        await update.message.reply_text("📭 No lessons today.")
         return
     
-    message = "📌 Занятия на сегодня:\n\n"
+    message = "📌 Lessons for today:\n\n"
     for i, l in enumerate(today_list, 1):
         message += f"{i}. 🕒 {l['time']} 📝 {l['description']}\n"
         
@@ -185,18 +187,18 @@ async def delete_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Handles the /delete_lesson command (admin-only). Deletes a lesson by index."""
     # Check for admin rights
     if update.effective_user.id not in ADMIN_IDS:
-        await update.message.reply_text("❌ У вас нет прав для удаления занятий.")
+        await update.message.reply_text("❌ You do not have permission to delete lessons.")
         return
 
     # Check if the command is executed in an allowed chat
     chat_id = str(update.effective_chat.id)
     if ALLOWED_CHATS and chat_id not in ALLOWED_CHATS and chat_id != CHAT_ID:
-        await update.message.reply_text("❌ Этот чат не авторизован для использования бота.")
+        await update.message.reply_text("❌ This chat is not authorized to use the bot.")
         return
         
     # Check for correct argument format (one digit)
     if len(context.args) != 1 or not context.args[0].isdigit():
-        await update.message.reply_text("❌ Используйте: /delete_lesson НОМЕР")
+        await update.message.reply_text("❌ Use: /delete_lesson NUMBER")
         return
         
     lessons = load_lessons()
@@ -205,9 +207,9 @@ async def delete_lesson(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if 0 <= idx < len(lessons):
         removed = lessons.pop(idx)
         save_lessons(lessons)
-        await update.message.reply_text(f"🗑 Занятие удалено: {removed['description']}")
+        await update.message.reply_text(f"🗑 Lesson deleted: {removed['description']}")
     else:
-        await update.message.reply_text("❌ Неверный номер занятия.")
+        await update.message.reply_text("❌ Invalid lesson number.")
 
 # ============ JOBQUEUE ============
 async def daily_check(context: ContextTypes.DEFAULT_TYPE):
@@ -239,7 +241,7 @@ async def daily_check(context: ContextTypes.DEFAULT_TYPE):
                 try:
                     await context.bot.send_message(
                         chat_id=chat,
-                        text=f"⏰ Напоминание через 30 минут:\n📝 {l['description']} в {lesson_time.strftime('%H:%M')}"
+                        text=f"⏰ Reminder in 30 minutes:\n📝 {l['description']} at {lesson_time.strftime('%H:%M')}"
                     )
                 except Exception as e:
                     logger.error(f"Error sending 30-min reminder to chat {chat}: {e}")
@@ -250,13 +252,15 @@ async def daily_check(context: ContextTypes.DEFAULT_TYPE):
 
         # 2. Daily 10:00 AM notification (This part executes only once per day at 10:00 AM because of the JobQueue setting)
         # Check if the lesson is today AND the current time is exactly 10:00 AM
+        # Note: The 10:00 AM check is a minor inefficiency here as the run_daily scheduler already ensures this job
+        # runs only at 10:00 AM. However, keeping the check for robustness if the job were ever run manually or by another scheduler.
         if lesson_time.date() == today and now.hour == 10 and now.minute == 0:
             # Send to all target chats
             for chat in target_chats:
                 try:
                     await context.bot.send_message(
                         chat_id=chat,
-                        text=f"🔔 Сегодня занятие в {lesson_time.strftime('%H:%M')}:\n📝 {l['description']}"
+                        text=f"🔔 Today's lesson is at {lesson_time.strftime('%H:%M')}:\n📝 {l['description']}"
                     )
                 except Exception as e:
                     logger.error(f"Error sending daily check to chat {chat}: {e}")
@@ -267,11 +271,16 @@ async def daily_check(context: ContextTypes.DEFAULT_TYPE):
 
 async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Logs errors caused by Updates."""
-    logger.error(f"Update caused error: {context.error}")
+    logger.error(f"Update {update} caused error: {context.error}")
 
 # ============ MAIN FUNCTION ============
 def main():
     """Starts the bot."""
+    # Ensure TOKEN is set
+    if not TOKEN:
+        logger.error("TELEGRAM_BOT_TOKEN environment variable is not set. Exiting.")
+        return
+        
     # Create the Application and pass it your bot's token.
     application = Application.builder().token(TOKEN).build()
 
@@ -295,10 +304,9 @@ def main():
     # Schedule the check for 30-minute reminders (runs every 60 seconds)
     jq.run_repeating(daily_check, interval=60, first=0, name="30min_reminder_check")
 
-    logger.info("🚀 KubReminder запущен!")
+    logger.info("🚀 KubReminder started!")
     
     # Run the bot until the user presses Ctrl-C
-    # allowed_updates=Update.ALL_TYPES is good practice for robustness
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
