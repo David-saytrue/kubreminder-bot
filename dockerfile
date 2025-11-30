@@ -1,25 +1,29 @@
-# Используем официальный образ Python 3.13 (slim — минимальный размер)
+# Use the official Python 3.13 image (slim — for minimal size)
 FROM python:3.13-slim
 
-# Устанавливаем рабочую директорию
+# Set the working directory
 WORKDIR /app
 
-# Устанавливаем переменные окружения
+# Set environment variables
+# PYTHONUNBUFFERED=1: prevents Python from buffering stdout/stderr
+# PYTHONDONTWRITEBYTECODE=1: prevents Python from writing .pyc files
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Копируем файл с зависимостями
+# Copy the dependencies file
 COPY requirements.txt .
 
-# Устанавливаем зависимости
+# Install dependencies
+# --no-cache-dir: saves space by not caching packages
+# --upgrade pip: ensures we have the latest pip version
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Копируем файлы бота в контейнер
+# Copy the bot files into the container
 COPY bot.py .
 
-# Создаем том для хранения данных (если нужно сохранять файлы)
+# Create a volume for data storage (if files need to be persisted, e.g., lessons.json)
 VOLUME ["/app/data"]
 
-# Команда запуска бота
+# Command to run the application when the container starts
 CMD ["python", "bot.py"]

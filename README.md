@@ -1,127 +1,156 @@
-# KubReminder — Telegram Bot для школы программирования
+🤖 KubReminder — Telegram Bot for a Programming School
 
-Telegram-бот для напоминаний о занятиях в школе программирования KubikRubik.
+This is a Telegram bot designed to help teachers at the KubikRubik programming school manage their schedule and receive timely lesson reminders.
 
-## 🚀 Возможности
+🚀 Features
 
-- 📚 Просмотр ближайших занятий
-- 📌 Просмотр занятий на сегодня
-- 📝 Добавление новых занятий (только админы)
-- ❌ Удаление занятий (только админы)
-- 🔔 Автоматические напоминания за 30 минут до занятия
-- ⏰ Ежедневные уведомления в 10:00
+📚 View Upcoming Lessons: Use /lessons to see the next few scheduled events.
 
-## 🛠 Установка и запуск
+📌 View Today's Lessons: Use /today to quickly check the schedule for the current day.
 
-### Требования
+📝 Add New Lessons: Administrators can add new events using /add_lesson.
 
-- Docker и Docker Compose
-- Python 3.13+ (для локального запуска)
+❌ Delete Lessons: Administrators can delete events using /delete_lesson.
 
-### 1. Клонирование репозитория
+🔔 Automatic Reminders: Sends notifications 30 minutes before a scheduled lesson.
 
-```bash
+⏰ Daily Digest: Sends a notification with all of today's lessons every day at 10:00 AM (Tbilisi time).
+
+🛠 Setup and Launch
+
+Requirements
+
+Docker and Docker Compose (recommended for deployment)
+
+Python 3.13+ (for local launch)
+
+1. Clone the Repository
+
 git clone <your-repo-url>
 cd my_bot
-```
 
-### 2. Настройка переменных окружения
+2. Configure Environment Variables
 
-Создайте файл `.env` в корне проекта:
+Create a file named .env in the project root directory and fill in the required variables:
 
-```env
-TELEGRAM_BOT_TOKEN=ваш_токен_бота
-CHAT_ID=ваш_chat_id
-ADMIN_ID=ваш_admin_id
-```
+# Your bot's token from BotFather
 
-### 3. Запуск через Docker (рекомендуется)
+TELEGRAM_BOT_TOKEN=your_bot_token
 
-```bash
+# The main chat ID for daily and general notifications (often the admin's personal chat)
+
+CHAT_ID=your_main_chat_id
+
+# The user ID of the administrator who can add/delete lessons
+
+ADMIN_ID=your_admin_user_id
+
+# Optional: Comma-separated list of group/channel IDs where the bot should send reminders (e.g., team chat)
+
+# Example: ALLOWED_CHATS=-1001234567890,-1001987654321
+
+ALLOWED_CHATS=
+
+3. Launch via Docker (Recommended)
+
+This method uses the provided Dockerfile and assumes you have a docker-compose.yml file configured.
+
+# Build the image and run the container in detached mode
+
 docker-compose up -d
-```
 
-### 4. Локальный запуск (альтернатива)
+4. Local Launch (Alternative)
 
-```bash
-# Создание виртуального окружения
+For development or testing purposes:
+
+# Create and activate a virtual environment
+
 python -m venv my_env
-source my_env/bin/activate  # Linux/Mac
-# или my_env\Scripts\activate  # Windows
+source my_env/bin/activate # Linux/Mac
 
-# Установка зависимостей
+# or my_env\Scripts\activate # Windows
+
+# Install dependencies (requires requirements.txt)
+
 pip install -r requirements.txt
 
-# Запуск бота
+# Run the bot
+
 python bot.py
-```
 
-## 📋 Команды бота
+📋 Bot Commands
 
-- `/start` — Приветствие и информация о боте
-- `/lessons` — Показать ближайшие занятия
-- `/today` — Показать занятия на сегодня
-- `/add_lesson ГГГГ-ММ-ДД ЧЧ:ММ описание` — Добавить занятие (только админ)
-- `/delete_lesson НОМЕР` — Удалить занятие (только админ)
+/start — Greeting and bot information.
 
-## 🔧 Настройка
+/lessons — Show the next upcoming lessons.
 
-### Получение токена бота
+/today — Show all lessons scheduled for the current day.
 
-1. Напишите [@BotFather](https://t.me/botfather) в Telegram
-2. Создайте нового бота командой `/newbot`
-3. Скопируйте токен и вставьте в `.env`
+/add_lesson YYYY-MM-DD HH:MM description — Add a lesson (Admin only).
+Example: /add_lesson 2025-10-21 17:00 Prepare Python curriculum
 
-### Получение Chat ID
+/delete_lesson NUMBER — Delete a lesson by its list number (Admin only).
 
-1. Напишите боту [@userinfobot](https://t.me/userinfobot)
-2. Отправьте ему любое сообщение
-3. Скопируйте ваш ID и вставьте в `.env` как `CHAT_ID` и `ADMIN_ID`
+🔧 Configuration Details
 
-### Добавление бота в группы и каналы
+Getting the Bot Token
 
-1. **Добавьте бота в группу/канал** как администратора
-2. **Получите ID группы/канала**:
-   - Добавьте бота [@userinfobot](https://t.me/userinfobot) в группу
-   - Он покажет ID группы (отрицательное число, например `-1001234567890`)
-3. **Добавьте ID в `.env`**:
-   ```
-   ALLOWED_CHATS=-1001234567890,-1001987654321
-   ```
-   (несколько ID через запятую)
+Message @BotFather on Telegram.
 
-**Важно**: Бот должен быть администратором группы/канала, чтобы отправлять сообщения!
+Create a new bot using the /newbot command.
 
-## 📁 Структура проекта
+Copy the token provided and set it as TELEGRAM_BOT_TOKEN in .env.
 
-```
+Getting Your User ID (for CHAT_ID and ADMIN_ID)
+
+Message @userinfobot.
+
+Send it any message.
+
+Copy your User ID and set it as CHAT_ID and ADMIN_ID in .env.
+
+Adding the Bot to Groups and Channels
+
+Add the bot to your target group/channel as an administrator.
+
+Get the Group/Channel ID:
+
+Add the bot @userinfobot to the group.
+
+It will display the group ID (a negative number, e.g., -1001234567890).
+
+Add the ID(s) to .env using a comma-separated list for ALLOWED_CHATS:
+
+ALLOWED_CHATS=-1001234567890,-1001987654321
+
+Important: The bot must be an administrator in the group/channel to send messages!
+
+📁 Project Structure
+
 my_bot/
-├── bot.py              # Основной код бота
-├── requirements.txt    # Зависимости Python
-├── dockerfile          # Docker образ
-├── docker-compose.yml  # Конфигурация Docker
-├── .env                # Переменные окружения (не коммитить!)
-├── .gitignore          # Игнорируемые файлы
-└── data/               # Данные бота (lessons.json)
-```
+├── bot.py # Main bot code and logic
+├── requirements.txt # Python dependencies (python-telegram-bot, pytz)
+├── Dockerfile # Docker image configuration (Python 3.13-slim)
+├── docker-compose.yml # Docker Compose configuration (for easy launch)
+├── .env # Environment variables (MUST NOT be committed!)
+├── .gitignore # List of ignored files
+└── data/ # Data volume for persistence
+└── lessons.json # JSON file storing the lesson schedule
 
-## 🔒 Безопасность
+📝 Notes
 
-- Токены и чувствительные данные хранятся в `.env` файле
-- `.env` файл игнорируется Git
-- Используйте Docker для изоляции
+The bot operates in the Asia/Tbilisi timezone. All times are interpreted relative to this timezone.
 
-## 📝 Заметки
+Lesson data is persisted in the lessons.json file inside the Docker volume (/app/data).
 
-- Бот работает в часовом поясе Тбилиси (Asia/Tbilisi)
-- Данные занятий сохраняются в `data/lessons.json`
-- Бот автоматически перезапускается при падении (через Docker)
+🤝 Support
 
-## 🤝 Поддержка
+If you encounter any issues, please check the following:
 
-Если возникли проблемы, проверьте:
+The correctness of your bot token.
 
-1. Правильность токена бота
-2. Корректность Chat ID и Admin ID
-3. Наличие всех переменных в `.env`
-4. Запущен ли Docker
+The accuracy of CHAT_ID and ADMIN_ID.
+
+The presence of all necessary environment variables in .env.
+
+If Docker is running and the container is healthy.
